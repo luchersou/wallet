@@ -34,4 +34,8 @@ export enum FailureCode {
   TransactionNotFound = 'TRANSACTION_NOT_FOUND',
   TransientInfrastructureError = 'TRANSIENT_INFRASTRUCTURE_ERROR',
   InternalError = 'INTERNAL_ERROR',
+
+  // Autenticação / autorização
+  Unauthenticated = 'UNAUTHENTICATED',
+  Forbidden = 'FORBIDDEN',
 }

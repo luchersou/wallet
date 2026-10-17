@@ -8,6 +8,7 @@ import { WageringQueries, type TransactionView } from '../../application/wagerin
 import { WagerTransactionStatus } from '../../domain/wager-transaction-status';
 import { SubmitWagerSchema, type SubmitWagerDto } from './dto/wager.dto';
 import { Metrics } from '../../../../shared/application/ports/metrics.port';
+import { assertProviderAccess } from '../../../auth/provider-identity.port';
 
 const STATUS_BY_RESULT: Record<WagerTransactionStatus, number> = {
   [WagerTransactionStatus.Processed]: 200,
@@ -35,6 +36,7 @@ export class WageringController {
     const key = idempotencyKey?.trim();
     if (!key) throw new InvalidPayloadError('Idempotency-Key header is required');
     if (key.length > 255) throw new InvalidPayloadError('Idempotency-Key is too long');
+    assertProviderAccess(req.identity, body.providerId);
 
     const startedAt = performance.now();
     const result = await this.processWager.execute({
@@ -60,7 +62,9 @@ export class WageringController {
   getByExternal(
     @Param('providerId') providerId: string,
     @Param('externalTransactionId') externalTransactionId: string,
+    @Req() req: Request,
   ): Promise<TransactionView> {
+    assertProviderAccess(req.identity, providerId);
     return this.queries.getByExternalId(providerId, externalTransactionId);
   }
 }

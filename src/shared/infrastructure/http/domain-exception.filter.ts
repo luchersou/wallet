@@ -10,6 +10,8 @@ const STATUS_BY_CODE: Partial<Record<FailureCode, number>> = {
   [FailureCode.InvalidMoney]: 400,
   [FailureCode.CurrencyMismatch]: 400,
   [FailureCode.WalletPlayerMismatch]: 400,
+  [FailureCode.Unauthenticated]: 401,
+  [FailureCode.Forbidden]: 403,
   [FailureCode.WalletNotFound]: 404,
   [FailureCode.TransactionNotFound]: 404,
   [FailureCode.IdempotencyConflict]: 409,
@@ -73,6 +75,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : String(exception),
       );
     }
+    if (mapped.status === 401) res.setHeader('WWW-Authenticate', 'Bearer');
     if (mapped.status === 503) res.setHeader('Retry-After', '1');
 
     res.status(mapped.status).json({

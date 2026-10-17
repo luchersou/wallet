@@ -14,6 +14,9 @@ const COLD_WALLETS = num(process.env.LOAD_WALLETS, 50);
 const HOT_RATIO = num(process.env.LOAD_HOT_RATIO, 0.2);
 const REPLAY_RATIO = 0.1;
 
+const TOKEN_URL =
+  process.env.LOAD_TOKEN_URL ?? 'http://localhost:8080/realms/jungle/protocol/openid-connect/token';
+
 const uuid = () => Bun.randomUUIDv7();
 
 interface WalletRef {
@@ -28,6 +31,25 @@ interface Sample {
 }
 
 // ---------- helpers HTTP / métricas
+
+/** Client credentials no Keycloak. Sem Keycloak (AUTH_MODE=disabled), segue sem token. */
+async function fetchToken(clientId: string, secret: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: secret }),
+    });
+    if (!res.ok) return undefined;
+    return ((await res.json()) as { access_token: string }).access_token;
+  } catch {
+    return undefined;
+  }
+}
+
+const bearer = (token?: string): Record<string, string> => (token ? { authorization: `Bearer ${token}` } : {});
+let backofficeToken: string | undefined;
+let providerToken: string | undefined;
 
 async function post(path: string, body: unknown, headers: Record<string, string> = {}) {
   const res = await fetch(BASE_URL + path, {
@@ -82,7 +104,7 @@ function percentile(sorted: number[], p: number): number {
 
 async function createWallet(amount: string): Promise<WalletRef> {
   const playerId = uuid();
-  const res = await post('/wallets', { playerId, initialBalance: { amount, currency: 'BRL' } });
+  const res = await post('/wallets', { playerId, initialBalance: { amount, currency: 'BRL' } }, bearer(backofficeToken));
   if (res.status !== 201) throw new Error(`wallet creation failed: ${res.status} ${JSON.stringify(res.body)}`);
   return { walletId: res.body.id, playerId };
 }
@@ -90,6 +112,10 @@ async function createWallet(amount: string): Promise<WalletRef> {
 async function main(): Promise<void> {
   const orm = await MikroORM.init({ ...config, debug: false });
   const conn = orm.em.getConnection();
+
+  backofficeToken = await fetchToken('backoffice', 'backoffice-secret');
+  providerToken = await fetchToken('provider-a', 'provider-a-secret');
+  console.log(`auth: ${providerToken ? 'keycloak tokens acquired' : 'no token (auth disabled?)'}`);
 
   console.log(`setup: ${COLD_WALLETS} wallets + 1 hot wallet @ ${BASE_URL}`);
   const hot = await createWallet('10000000.00');
@@ -133,9 +159,9 @@ async function main(): Promise<void> {
       const wallet = Math.random() < HOT_RATIO ? hot : cold[Math.floor(Math.random() * cold.length)]!;
       kind = Math.random() < 0.75 ? 'BET' : 'WIN';
       const externalTransactionId = `load-${uuid()}`;
-      key = `provider-load:${externalTransactionId}`;
+      key = `provider-a:${externalTransactionId}`;
       body = {
-        providerId: 'provider-load',
+        providerId: 'provider-a',
         externalTransactionId,
         playerId: wallet.playerId,
         walletId: wallet.walletId,
@@ -151,7 +177,7 @@ async function main(): Promise<void> {
     try {
       const res = await fetch(`${BASE_URL}/wagering/transactions`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': key },
+        headers: { 'content-type': 'application/json', 'idempotency-key': key, ...bearer(providerToken) },
         body: JSON.stringify(body),
       });
       await res.arrayBuffer();
@@ -192,7 +218,7 @@ async function main(): Promise<void> {
   console.log('verifying consistency ...');
   let inconsistent = 0;
   for (const w of allWallets) {
-    const res = await post(`/wallets/${w.walletId}/reconciliation`, {});
+    const res = await post(`/wallets/${w.walletId}/reconciliation`, {}, bearer(backofficeToken));
     if (!res.body?.consistent) inconsistent++;
   }
   const globalDivergent = (
@@ -318,7 +344,7 @@ Closed loop: ${CONCURRENCY} concurrent virtual users for ${DURATION_S}s. 1 hot w
   if (inconsistent > 0 || globalDivergent > 0) process.exit(1);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error(err);
   process.exit(1);
 });

@@ -37,6 +37,17 @@ services:
     ports:
       - "4566:4566"
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/keycloak:/opt/keycloak/data/import:ro
+
   # One-shot: aplica migrations e cria as filas, depois termina
   setup:
     build: .
@@ -52,9 +63,13 @@ services:
   api:
     build: .
     environment:
-      SERVICE_NAME: api
       <<: *app-env
       PORT: "3000"
+      SERVICE_NAME: api
+      AUTH_MODE: keycloak
+      OIDC_ISSUER: http://localhost:8080/realms/jungle
+      OIDC_AUDIENCE: wallet-api
+      OIDC_JWKS_URL: http://keycloak:8080/realms/jungle/protocol/openid-connect/certs
     command: ["bun", "run", "src/main.api.ts"]
     init: true
     restart: unless-stopped
@@ -63,6 +78,8 @@ services:
     depends_on:
       setup:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_started
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 5s
@@ -72,9 +89,9 @@ services:
   worker:
     build: .
     environment:
-      SERVICE_NAME: worker
       <<: *app-env
       WORKER_PORT: "3001"
+      SERVICE_NAME: worker
     command: ["bun", "run", "src/main.worker.ts"]
     init: true                  # tini como PID 1: repassa o SIGTERM corretamente
     restart: unless-stopped

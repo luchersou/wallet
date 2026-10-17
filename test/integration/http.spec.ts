@@ -14,6 +14,7 @@ let baseUrl: string;
 let orm: MikroORM;
 
 beforeAll(async () => {
+  process.env.AUTH_MODE = 'disabled';
   process.env.LOG_LEVEL = 'silent';
   app = await NestFactory.create(ApiModule, { logger: false });
   configureApp(app);

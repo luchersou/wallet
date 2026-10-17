@@ -1,11 +1,26 @@
-export interface ProviderIdentity {
-  providerId: string;
-}
+import { ProviderForbiddenError } from './auth.errors';
 
 /**
- * Ponto de extensão para autenticação de provedores via IdP externo (OIDC — Keycloak/Zitadel).
- * Não implementado por decisão de escopo: ver ARCHITECTURE.md.
+ * anonymous: autenticação desligada (AUTH_MODE=disabled).
+ * client: token válido; providerId presente só para clients de provedor.
  */
+export type AuthIdentity =
+  | { kind: 'anonymous' }
+  | { kind: 'client'; subject: string; clientId: string; providerId?: string };
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    identity?: AuthIdentity;
+  }
+}
+
 export abstract class ProviderIdentityPort {
-  abstract resolve(authorizationHeader: string | undefined): Promise<ProviderIdentity | undefined>;
+  /** undefined = credencial ausente ou inválida (401). Falha de infraestrutura lança erro transitório (503). */
+  abstract resolve(authorizationHeader: string | undefined): Promise<AuthIdentity | undefined>;
+}
+
+/** Validação de domínio na borda HTTP: um client só age como o provedor do próprio token. */
+export function assertProviderAccess(identity: AuthIdentity | undefined, providerId: string): void {
+  if (!identity || identity.kind === 'anonymous') return;
+  if (identity.providerId !== providerId) throw new ProviderForbiddenError(providerId);
 }
