@@ -12,7 +12,7 @@ x-app-env: &app-env
   SQS_WAGER_QUEUE: wager-transactions.fifo
   SQS_WAGER_DLQ: wager-transactions-dlq.fifo
   SQS_EVENTS_QUEUE: wallet-events.fifo
-  SQS_MAX_RECEIVE_COUNT: "5"
+  SQS_MAX_RECEIVE_COUNT: "10"
   MIKRO_ORM_CLI_ALWAYS_ALLOW_TS: "1"
 
 services:
@@ -33,7 +33,7 @@ services:
       retries: 20
 
   sqs:
-    image: ministackorg/ministack:latest
+    image: ministackorg/ministack:1.5.27
     ports:
       - "4566:4566"
 

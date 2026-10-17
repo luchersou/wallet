@@ -41,7 +41,7 @@ export function readConsumerOptions(): ConsumerOptions {
     maxMessages: 10,
     waitTimeSeconds: num(process.env.SQS_WAIT_TIME_SECONDS, 10),
     visibilityTimeoutSeconds: num(process.env.SQS_VISIBILITY_TIMEOUT_SECONDS, 30),
-    maxReceiveCount: num(process.env.SQS_MAX_RECEIVE_COUNT, 5),
+    maxReceiveCount: num(process.env.SQS_MAX_RECEIVE_COUNT, 10),
     retryBaseSeconds: num(process.env.SQS_RETRY_BASE_SECONDS, 2),
     retryMaxSeconds: num(process.env.SQS_RETRY_MAX_SECONDS, 60),
   };
@@ -146,15 +146,22 @@ export class WagerTransactionConsumer {
         await this.releaseAll(messages.slice(i));
         return;
       }
-      await this.handle(messages[i]!);
+      const settled = await this.handle(messages[i]!);
+      if (!settled) {
+        // A mensagem foi reagendada: as seguintes do grupo voltam para a fila sem serem processadas.
+        // O FIFO só as entrega de novo depois dela, e a ordem dentro do grupo se mantém.
+        await this.releaseAll(messages.slice(i + 1));
+        return;
+      }
     }
   }
 
-  private handle(message: Message): Promise<void> {
+  /** true se a mensagem saiu da fila (ack ou DLQ); false se foi reagendada para retry. */
+  private handle(message: Message): Promise<boolean> {
     return LogContext.run({ messageId: message.MessageId }, () => this.handleInContext(message));
   }
 
-  private async handleInContext(message: Message): Promise<void> {
+  private async handleInContext(message: Message): Promise<boolean> {
     const receiveCount = Number(message.Attributes?.ApproximateReceiveCount ?? '1');
 
     let envelope: z.infer<typeof EnvelopeSchema>;
@@ -162,7 +169,7 @@ export class WagerTransactionConsumer {
       envelope = EnvelopeSchema.parse(JSON.parse(message.Body ?? ''));
     } catch (err) {
       await this.deadLetter(message, 'INVALID_MESSAGE', err instanceof Error ? err.message : String(err), receiveCount);
-      return;
+      return true;
     }
 
     LogContext.assign({
@@ -193,16 +200,17 @@ export class WagerTransactionConsumer {
 
       // execute() só retorna depois do commit: ack é sempre pós-commit
       await this.ack(message);
+      return true;
     } catch (err) {
       const failure = classify(err);
 
       if (failure.kind === 'permanent') {
         await this.deadLetter(message, failure.reason, failure.detail, receiveCount);
-        return;
+        return true;
       }
       if (receiveCount >= this.options.maxReceiveCount) {
         await this.deadLetter(message, 'RETRIES_EXHAUSTED', failure.detail, receiveCount);
-        return;
+        return true;
       }
 
       const delay = Math.min(
@@ -212,6 +220,7 @@ export class WagerTransactionConsumer {
       this.metrics.retryScheduled('consumer');
       this.logger.warn(`retrying message ${envelope.messageId} in ${delay}s (attempt ${receiveCount}): ${failure.detail}`);
       await this.changeVisibility(message, delay);
+      return false;
     }
   }
 

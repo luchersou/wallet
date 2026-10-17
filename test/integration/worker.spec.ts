@@ -199,6 +199,38 @@ describe('SQS consumer', () => {
     expect(dead[0]?.MessageAttributes?.failureReason?.StringValue).toBe('RETRIES_EXHAUSTED');
     expect(await queueDepth(urls.main)).toBe(0);
   });
+
+  it('keeps group order: after a retry, later messages of the group are not processed', async () => {
+    const w = await openWallet('10.00');
+    const first = envelope(w, 'BET', '1.00');
+    const second = envelope(w, 'BET', '2.00');
+
+    const seen: string[] = [];
+    const failsFirst = {
+      execute: async (cmd: { externalTransactionId: string }) => {
+        seen.push(cmd.externalTransactionId);
+        if (cmd.externalTransactionId === first.data.externalTransactionId) {
+          throw new TransientInfrastructureError('database unavailable', null);
+        }
+        return { transactionId: uuid(), status: Status.Processed, balance: { amount: '0.00', currency: 'BRL' }, idempotentReplay: false };
+      },
+    } as unknown as ProcessWagerTransaction;
+
+    const consumer = new WagerTransactionConsumer(
+      sqs,
+      config,
+      { ...readConsumerOptions(), waitTimeSeconds: 1, retryBaseSeconds: 30 },
+      failsFirst,
+      new NoopMetrics(),
+    );
+
+    await send(JSON.stringify(first), w.walletId);
+    await send(JSON.stringify(second), w.walletId);
+
+    expect(await consumer.pollOnce()).toBe(2); // as duas chegaram no mesmo lote
+    expect(seen).toEqual([first.data.externalTransactionId]); // a segunda não foi processada
+    expect(await queueDepth(urls.main)).toBe(2); // nenhuma foi apagada
+  });
 });
 
 describe('outbox publisher', () => {

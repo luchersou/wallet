@@ -3,6 +3,7 @@ import {
   CreateQueueCommand,
   GetQueueAttributesCommand,
   ListQueuesCommand,
+  SetQueueAttributesCommand,
 } from '@aws-sdk/client-sqs';
 
 const client = new SQSClient({
@@ -48,14 +49,20 @@ async function main(): Promise<void> {
   const dlqArn = Attributes?.QueueArn;
   if (!dlqArn) throw new Error('DLQ sem ARN');
 
-  await createQueue(process.env.SQS_WAGER_QUEUE!, {
-    ...fifo,
-    VisibilityTimeout: '30',
-    RedrivePolicy: JSON.stringify({
-      deadLetterTargetArn: dlqArn,
-      maxReceiveCount: process.env.SQS_MAX_RECEIVE_COUNT ?? '5',
+  // Atributos mutáveis aplicados à parte: rodar o script de novo atualiza uma fila já existente
+  const mainUrl = await createQueue(process.env.SQS_WAGER_QUEUE!, fifo);
+  await client.send(
+    new SetQueueAttributesCommand({
+      QueueUrl: mainUrl,
+      Attributes: {
+        VisibilityTimeout: '30',
+        RedrivePolicy: JSON.stringify({
+          deadLetterTargetArn: dlqArn,
+          maxReceiveCount: process.env.SQS_MAX_RECEIVE_COUNT ?? '10',
+        }),
+      },
     }),
-  });
+  );
 
   await createQueue(process.env.SQS_EVENTS_QUEUE!, fifo);
 }

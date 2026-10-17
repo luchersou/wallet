@@ -12,7 +12,7 @@ const EnvSchema = z.object({
   SQS_WAGER_QUEUE: z.string().default('wager-transactions.fifo'),
   SQS_WAGER_DLQ: z.string().default('wager-transactions-dlq.fifo'),
   SQS_EVENTS_QUEUE: z.string().default('wallet-events.fifo'),
-  SQS_MAX_RECEIVE_COUNT: z.coerce.number().int().positive().default(5),
+  SQS_MAX_RECEIVE_COUNT: z.coerce.number().int().positive().default(10),
 
   REFERENCE_RETRY_MAX_ATTEMPTS: z.coerce.number().int().positive().default(10),
   REFERENCE_RETRY_BASE_MS: z.coerce.number().int().positive().default(1_000),
