@@ -1,0 +1,55 @@
+{
+  "name": "jungle-wallet",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "infra:up": "docker compose up -d postgres sqs && bun run sqs:setup",
+    "infra:down": "docker compose down",
+    "sqs:setup": "bun run scripts/setup-sqs.ts",
+    "migration:create": "bunx --bun mikro-orm migration:create",
+    "migration:up": "bunx --bun mikro-orm migration:up",
+    "migration:down": "bunx --bun mikro-orm migration:down",
+    "typecheck": "tsc --noEmit",
+    "start:api": "bun run src/main.api.ts",
+    "dev:api": "bun --watch src/main.api.ts",
+    "start:worker": "bun run src/main.worker.ts",
+    "test:unit": "bun test test/unit",
+    "test:integration": "bun test test/integration",
+    "test:load": "bun run test/load/load-test.ts",
+    "stack:up": "docker compose up -d --build --scale worker=3",
+    "stack:down": "docker compose down",
+    "test:concurrency": "bun test test/concurrency --timeout 180000"
+  },
+  "mikro-orm": {
+    "configPaths": ["./mikro-orm.config.ts"]
+  },
+  "devDependencies": {
+    "@mikro-orm/cli": "^7.2.5",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6"
+  },
+  "peerDependencies": {
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1152.0",
+    "@mikro-orm/core": "^7.2.5",
+    "@mikro-orm/migrations": "^7.2.5",
+    "@mikro-orm/nestjs": "^7.1.0",
+    "@mikro-orm/postgresql": "^7.2.5",
+    "@nestjs/common": "^12.1.3",
+    "@nestjs/core": "^12.1.3",
+    "@nestjs/platform-express": "^12.1.3",
+    "@nestjs/schedule": "^12.0.2",
+    "@nestjs/terminus": "^12.1.0",
+    "decimal.js": "^10.6.0",
+    "nestjs-pino": "^5.3.1",
+    "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
+    "prom-client": "^15.1.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.6.7"
+  }
+}

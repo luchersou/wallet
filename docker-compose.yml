@@ -1,0 +1,92 @@
+x-app-env: &app-env
+  NODE_ENV: production
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: wallet
+  DB_PASSWORD: wallet
+  DB_NAME: wallet
+  AWS_REGION: us-east-1
+  AWS_ENDPOINT: http://sqs:4566
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  SQS_WAGER_QUEUE: wager-transactions.fifo
+  SQS_WAGER_DLQ: wager-transactions-dlq.fifo
+  SQS_EVENTS_QUEUE: wallet-events.fifo
+  SQS_MAX_RECEIVE_COUNT: "5"
+  MIKRO_ORM_CLI_ALWAYS_ALLOW_TS: "1"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: wallet
+      POSTGRES_PASSWORD: wallet
+      POSTGRES_DB: wallet
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet -d wallet"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  sqs:
+    image: ministackorg/ministack:latest
+    ports:
+      - "4566:4566"
+
+  # One-shot: aplica migrations e cria as filas, depois termina
+  setup:
+    build: .
+    environment: *app-env
+    command: ["sh", "-c", "bunx --bun mikro-orm migration:up && bun run scripts/setup-sqs.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sqs:
+        condition: service_started
+    restart: "no"
+
+  api:
+    build: .
+    environment:
+      SERVICE_NAME: api
+      <<: *app-env
+      PORT: "3000"
+    command: ["bun", "run", "src/main.api.ts"]
+    init: true
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  worker:
+    build: .
+    environment:
+      SERVICE_NAME: worker
+      <<: *app-env
+      WORKER_PORT: "3001"
+    command: ["bun", "run", "src/main.worker.ts"]
+    init: true                  # tini como PID 1: repassa o SIGTERM corretamente
+    restart: unless-stopped
+    stop_grace_period: 30s      # tempo para drenar mensagens em andamento
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

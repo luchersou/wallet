@@ -1,0 +1,61 @@
+{
+  "environment": {
+    "date": "2026-10-17T01:52:22.335Z",
+    "os": "Windows_NT 10.0.26200 (x64)",
+    "cpu": "11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz",
+    "cores": 8,
+    "memoryGb": 15,
+    "bun": "1.4.3",
+    "target": "http://localhost:3000"
+  },
+  "methodology": {
+    "model": "closed loop",
+    "concurrency": 50,
+    "durationSeconds": 30,
+    "wallets": {
+      "hot": 1,
+      "cold": 50,
+      "hotTrafficRatio": 0.2
+    },
+    "mix": {
+      "replayRatio": 0.1,
+      "bet": 0.75,
+      "win": 0.25
+    }
+  },
+  "results": {
+    "requests": 4247,
+    "throughputRps": 139.5,
+    "latencyMs": {
+      "p50": 320.3,
+      "p95": 572.7,
+      "p99": 784.3,
+      "max": 1251.6
+    },
+    "replayLatencyMs": {
+      "p50": 297.5,
+      "p95": 540.3
+    },
+    "statusCodes": {
+      "200": 4247
+    },
+    "errorRate": 0,
+    "networkErrors": 0,
+    "concurrency": {
+      "lockAcquisitions": 4247,
+      "avgLockWaitMs": 36.6,
+      "p95LockWaitMsUpperBound": 250,
+      "lockConflicts": 0
+    },
+    "outbox": {
+      "maxPendingDuringLoad": 562,
+      "maxLagSeconds": 2.55,
+      "drainSecondsAfterLoad": 1.78
+    },
+    "consistency": {
+      "walletsReconciled": 51,
+      "inconsistentWallets": 0,
+      "globalLedgerDivergences": 0
+    }
+  }
+}
