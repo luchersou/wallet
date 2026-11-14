@@ -21,8 +21,8 @@ export interface SubmitWagerCommand {
 }
 
 /**
- * sha256 do JSON canônico (chaves ordenadas) apenas dos campos de negócio.
- * Fora do hash: Idempotency-Key, correlationId e metadados de transporte.
+ * sha256 of the canonical JSON (sorted keys) of the business fields only.
+ * Excluded from the hash: Idempotency-Key, correlationId and transport metadata.
  */
 export function wagerPayloadHash(cmd: SubmitWagerCommand): string {
   return payloadHash({

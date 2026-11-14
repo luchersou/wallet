@@ -31,13 +31,13 @@ export class HealthController {
     @Inject(SQS_CONFIG) private readonly sqsConfig: SqsConfig,
   ) {}
 
-  /** Processo vivo — não depende de nada externo. */
+  /** Process alive — does not depend on anything external. */
   @Get('live')
   live(): { status: string } {
     return { status: 'ok' };
   }
 
-  /** PostgreSQL e SQS alcançáveis. */
+  /** PostgreSQL and SQS reachable. */
   @Get('ready')
   async ready(@Res({ passthrough: true }) res: Response) {
     const [postgres, sqs] = await Promise.all([

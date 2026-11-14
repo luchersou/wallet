@@ -35,9 +35,9 @@ export class Migration20261015000003_ledger_entries extends Migration {
         for each row execute function forbid_row_mutation();
     `);
 
-    // Encadeamento: balance_before da entrada N == balance_after da entrada N-1
-    // Primeira entrada da wallet: começa em 0, com versão 1 (abertura com saldo)
-    // ou 2 (primeiro movimento de uma wallet aberta com saldo zero, que nasce em v1 sem ledger).
+    // Chaining: balance_before of entry N == balance_after of entry N-1
+    // First entry of the wallet: starts at 0, with version 1 (opening with balance)
+    // or 2 (first movement of a wallet opened with zero balance, which starts at v1 with no ledger).
     this.addSql(`
       create function ledger_check_chain() returns trigger language plpgsql as $$
       declare
@@ -71,7 +71,7 @@ export class Migration20261015000003_ledger_entries extends Migration {
         for each row execute function ledger_check_chain();
     `);
 
-    // Verificação comum: saldo da wallet == balance_after da entrada da versão atual
+    // Common check: wallet balance == balance_after of the current version's entry
     this.addSql(`
       create function assert_wallet_matches_ledger(p_wallet_id uuid) returns void language plpgsql as $$
       begin
@@ -94,7 +94,7 @@ export class Migration20261015000003_ledger_entries extends Migration {
       end $$;
     `);
 
-    // Uma função por tabela: NEW tem formato diferente em cada uma
+    // One function per table: NEW has a different shape in each one
     this.addSql(`
       create function wallet_matches_ledger_on_wallet() returns trigger language plpgsql as $$
       begin

@@ -21,18 +21,18 @@ async function waitForSqs(): Promise<void> {
       await client.send(new ListQueuesCommand({}));
       return;
     } catch {
-      console.log(`SQS ainda não respondeu (tentativa ${attempt}/30)...`);
+      console.log(`SQS has not responded yet (attempt ${attempt}/30)...`);
       await Bun.sleep(1000);
     }
   }
-  throw new Error('SQS indisponível após 30 tentativas');
+  throw new Error('SQS unavailable after 30 attempts');
 }
 
 async function createQueue(name: string, attributes: Record<string, string>): Promise<string> {
   const { QueueUrl } = await client.send(
     new CreateQueueCommand({ QueueName: name, Attributes: attributes }),
   );
-  if (!QueueUrl) throw new Error(`Falha ao criar ${name}`);
+  if (!QueueUrl) throw new Error(`Failed to create ${name}`);
   console.log(`✔ ${name} → ${QueueUrl}`);
   return QueueUrl;
 }
@@ -47,9 +47,9 @@ async function main(): Promise<void> {
     new GetQueueAttributesCommand({ QueueUrl: dlqUrl, AttributeNames: ['QueueArn'] }),
   );
   const dlqArn = Attributes?.QueueArn;
-  if (!dlqArn) throw new Error('DLQ sem ARN');
+  if (!dlqArn) throw new Error('DLQ has no ARN');
 
-  // Atributos mutáveis aplicados à parte: rodar o script de novo atualiza uma fila já existente
+  // Mutable attributes applied separately: running the script again updates an existing queue
   const mainUrl = await createQueue(process.env.SQS_WAGER_QUEUE!, fifo);
   await client.send(
     new SetQueueAttributesCommand({

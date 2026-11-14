@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-/** Campos de correlação anexados automaticamente a toda linha de log. */
+/** Correlation fields automatically attached to every log line. */
 export interface LogFields {
   correlationId?: string;
   messageId?: string;
@@ -12,12 +12,12 @@ export interface LogFields {
 const storage = new AsyncLocalStorage<LogFields>();
 
 export const LogContext = {
-  /** Abre um escopo herdando os campos do escopo atual. */
+  /** Opens a scope inheriting the fields of the current scope. */
   run<T>(fields: LogFields, fn: () => T): T {
     return storage.run({ ...storage.getStore(), ...fields }, fn);
   },
 
-  /** Enriquece o escopo atual (ex.: transactionId conhecido no meio do fluxo). */
+  /** Enriches the current scope (e.g. transactionId known mid-flow). */
   assign(fields: LogFields): void {
     const store = storage.getStore();
     if (store) Object.assign(store, fields);

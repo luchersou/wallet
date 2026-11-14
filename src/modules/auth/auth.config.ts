@@ -11,7 +11,7 @@ export type AuthConfig =
   | { mode: 'disabled' }
   | { mode: 'keycloak'; issuer: string; audience: string; jwksUrl: string };
 
-/** Lido no bootstrap (não no import): os testes alternam o modo por suíte. */
+/** Read at bootstrap (not at import): tests switch the mode per suite. */
 export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
   const parsed = AuthEnvSchema.parse(env);
   if (parsed.AUTH_MODE === 'disabled') return { mode: 'disabled' };

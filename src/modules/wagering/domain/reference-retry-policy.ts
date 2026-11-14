@@ -1,9 +1,9 @@
 import { InvariantViolationError } from '../../../shared/domain/invariant-violation.error';
 
 /**
- * Backoff exponencial para transações PENDING_REFERENCE.
- * Default: até 10 reagendamentos (11 reprocessamentos pelo worker),
- * intervalos de 1s dobrando até o teto de 5min ≈ 18,5 min no total.
+ * Exponential backoff for PENDING_REFERENCE transactions.
+ * Default: up to 10 reschedules (11 reprocessings by the worker),
+ * intervals starting at 1s, doubling up to a 5min cap ≈ 18.5 min in total.
  */
 export class ReferenceRetryPolicy {
   constructor(

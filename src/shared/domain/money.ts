@@ -1,7 +1,7 @@
 import { Decimal } from 'decimal.js';
 import { CurrencyMismatchError, InvalidMoneyError } from './money.errors';
 
-/** Instância isolada do Decimal: não depende de configuração global. */
+/** Isolated Decimal instance: does not depend on global configuration. */
 const Dec = Decimal.clone({
   precision: 40,
   rounding: Decimal.ROUND_HALF_EVEN,
@@ -10,7 +10,7 @@ const Dec = Decimal.clone({
 });
 
 const SCALE = 2;
-/** Até 17 dígitos inteiros + 2 decimais = numeric(19,2) do banco. */
+/** Up to 17 integer digits + 2 decimals = the database's numeric(19,2). */
 const AMOUNT_PATTERN = /^(0|[1-9]\d{0,16})\.\d{2}$/;
 const CURRENCY_PATTERN = /^[A-Z]{3}$/;
 const MAX_ABSOLUTE = new Dec('99999999999999999.99');
@@ -27,8 +27,8 @@ export class Money {
   ) {}
 
   /**
-   * Contrato de entrada: string decimal não negativa com exatamente 2 casas.
-   * Rejeita NaN, Infinity, notação científica, vazio, sinal, separador errado.
+   * Input contract: non-negative decimal string with exactly 2 decimal places.
+   * Rejects NaN, Infinity, scientific notation, empty, sign, wrong separator.
    */
   static from(props: MoneyProps): Money {
     if (props === null || typeof props !== 'object') {
@@ -90,7 +90,7 @@ export class Money {
     return this.value.lessThan(other.value);
   }
 
-  /** Igualdade de valor: moedas diferentes simplesmente não são iguais. */
+  /** Value equality: different currencies are simply not equal. */
   equals(other: Money): boolean {
     return this.currency === other.currency && this.value.equals(other.value);
   }
@@ -103,7 +103,7 @@ export class Money {
     return `${this.amount} ${this.currency}`;
   }
 
-  /** Resultados internos de operações: podem ser negativos (ex.: diferença na reconciliação). */
+  /** Internal operation results: may be negative (e.g. reconciliation difference). */
   private static of(value: Decimal, currency: string): Money {
     if (value.decimalPlaces() > SCALE) {
       throw new InvalidMoneyError(`result exceeds ${SCALE} decimal places`);
@@ -111,7 +111,7 @@ export class Money {
     if (value.abs().greaterThan(MAX_ABSOLUTE)) {
       throw new InvalidMoneyError('result exceeds supported magnitude');
     }
-    // Normaliza -0 para 0
+    // Normalizes -0 to 0
     const normalized = value.isZero() ? new Dec(0) : value;
     return new Money(normalized, currency);
   }

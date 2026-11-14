@@ -11,7 +11,7 @@ export interface WagerResult {
   failureCode?: FailureCode;
 }
 
-/** Terminal: saldo observado no momento. Pendente: saldo atual da wallet. */
+/** Terminal: balance observed at that moment. Pending: current wallet balance. */
 export function toWagerResult(
   tx: WagerTransaction,
   currentBalance: Money,

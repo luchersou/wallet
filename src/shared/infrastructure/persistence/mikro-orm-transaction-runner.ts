@@ -37,8 +37,8 @@ export class MikroOrmTransactionRunner extends TransactionRunner {
 
   async run<T>(work: () => Promise<T>): Promise<T> {
     try {
-      // transactional() registra o fork no TransactionContext:
-      // o EntityManager injetado nos repositórios resolve para esta transação.
+      // transactional() registers the fork in the TransactionContext:
+      // the EntityManager injected into the repositories resolves to this transaction.
       return await this.em.fork().transactional(() => work());
     } catch (err) {
       if (err instanceof UniqueConstraintViolationException) {

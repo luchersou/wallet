@@ -25,8 +25,8 @@ type ReferenceDecision =
   | { outcome: 'reject'; code: FailureCode };
 
 /**
- * Aplica as regras da seção 7 a uma transação com a wallet JÁ TRAVADA,
- * e persiste tudo na transação SQL corrente: transação → ledger → wallet → outbox.
+ * Applies the section 7 rules to a transaction with the wallet ALREADY LOCKED,
+ * and persists everything in the current SQL transaction: transaction → ledger → wallet → outbox.
  */
 @Injectable()
 export class WagerTransactionProcessor {
@@ -65,14 +65,14 @@ export class WagerTransactionProcessor {
       tx.reject(decision.code, wallet.balance, now);
       events.push(WagerTransactionRejected.from(tx, ctx));
     } else if (!tx.affectsBalance()) {
-      // LOSS: registra o resultado sem mover saldo
+      // LOSS: records the outcome without moving the balance
       tx.markProcessed(decision.reference?.id, wallet.balance, now);
       events.push(WagerTransactionProcessed.from(tx, ctx));
     } else {
       const direction = tx.ledgerDirectionFor(decision.reference);
 
       if (direction === LedgerDirection.Debit && !wallet.canDebit(tx.money)) {
-        // Reversão sem saldo é operacionalmente diferente de aposta sem saldo
+        // A reversal without balance is operationally different from a bet without balance
         const code = tx.isReversal() ? FailureCode.ReversalWouldOverdraw : FailureCode.InsufficientFunds;
         tx.reject(code, wallet.balance, now);
         events.push(WagerTransactionRejected.from(tx, ctx));
@@ -92,7 +92,7 @@ export class WagerTransactionProcessor {
       }
     }
 
-    // Ordem das FKs: transação → ledger → wallet → outbox
+    // FK order: transaction → ledger → wallet → outbox
     if (options.isNew) await this.txs.add(tx);
     else await this.txs.save(tx);
 

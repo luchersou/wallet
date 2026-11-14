@@ -19,7 +19,7 @@ export interface OpenWalletProps {
   id: string;
   playerId: string;
   initialBalance: Money;
-  /** Usados apenas se initialBalance > 0 (transação OPENING + lançamento). */
+  /** Used only if initialBalance > 0 (OPENING transaction + entry). */
   openingTransactionId: string;
   openingLedgerEntryId: string;
   at: Date;
@@ -49,8 +49,8 @@ export class Wallet {
   ) {}
 
   /**
-   * Cria a wallet com version = 1. Se o saldo inicial for positivo, devolve o
-   * lançamento CREDIT de abertura (0 → saldo inicial) com walletVersion = 1.
+   * Creates the wallet with version = 1. If the initial balance is positive, returns the
+   * opening CREDIT entry (0 → initial balance) with walletVersion = 1.
    */
   static open(props: OpenWalletProps): OpenWalletResult {
     if (!props.id || !props.playerId) {
@@ -90,7 +90,7 @@ export class Wallet {
     return { wallet, openingEntry };
   }
 
-  /** Reconstrução a partir da persistência — não revalida transições. */
+  /** Rehydration from persistence — does not revalidate transitions. */
   static rehydrate(state: WalletState): Wallet {
     return new Wallet(
       state.id,
@@ -145,7 +145,7 @@ export class Wallet {
     };
   }
 
-  /** Cria o lançamento ANTES de mutar: se a validação falhar, a wallet fica intacta. */
+  /** Creates the entry BEFORE mutating: if validation fails, the wallet stays intact. */
   private apply(direction: LedgerDirection, movement: BalanceMovement): WalletLedgerEntry {
     const balanceBefore = this._balance;
     const balanceAfter =

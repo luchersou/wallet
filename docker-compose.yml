@@ -48,7 +48,7 @@ services:
     volumes:
       - ./docker/keycloak:/opt/keycloak/data/import:ro
 
-  # One-shot: aplica migrations e cria as filas, depois termina
+  # One-shot: applies migrations and creates the queues, then exits
   setup:
     build: .
     environment: *app-env
@@ -93,9 +93,9 @@ services:
       WORKER_PORT: "3001"
       SERVICE_NAME: worker
     command: ["bun", "run", "src/main.worker.ts"]
-    init: true                  # tini como PID 1: repassa o SIGTERM corretamente
+    init: true                  # tini as PID 1: forwards SIGTERM correctly
     restart: unless-stopped
-    stop_grace_period: 30s      # tempo para drenar mensagens em andamento
+    stop_grace_period: 30s      # time to drain in-flight messages
     depends_on:
       setup:
         condition: service_completed_successfully

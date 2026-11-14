@@ -83,6 +83,6 @@ export class MikroOrmOutboxRepository extends OutboxRepository {
       const record = byId.get(message.id);
       if (record) applyMutable(message, record);
     }
-    await this.em.flush(); // um flush para o lote inteiro
+    await this.em.flush(); // one flush for the whole batch
   }
 }

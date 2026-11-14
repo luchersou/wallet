@@ -21,16 +21,16 @@ export class RetryPendingReference {
   ) {}
 
   async execute(transactionId: string): Promise<RetryOutcome> {
-    // 1ª leitura só para descobrir a wallet — a ordem de lock é sempre wallet primeiro
+    // 1st read only to discover the wallet — lock order is always wallet first
     const snapshot = await this.runner.run(() => this.txs.findById(transactionId));
     if (!snapshot || snapshot.status !== WagerTransactionStatus.PendingReference) return 'skipped';
 
     return this.runner.run(async () => {
       const now = this.clock.now();
       const wallet = await this.wallets.findByIdForUpdate(snapshot.walletId);
-      const tx = await this.txs.findById(transactionId); // releitura com a wallet travada
+      const tx = await this.txs.findById(transactionId); // re-read with the wallet locked
 
-      // Outro worker pode ter resolvido ou reagendado no meio-tempo
+      // Another worker may have resolved or rescheduled it in the meantime
       if (
         !wallet ||
         !tx ||

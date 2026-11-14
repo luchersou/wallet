@@ -11,7 +11,7 @@ export class MikroOrmInboxRepository extends InboxRepository {
   }
 
   async tryRegister(message: InboxMessage): Promise<boolean> {
-    // Concorrentes com o mesmo id: o segundo espera o commit do primeiro e cai no conflito.
+    // Concurrent inserts with the same id: the second waits for the first to commit and hits the conflict.
     const rows = (await this.em.execute(
       `insert into inbox_messages (consumer_name, message_id, payload_hash, received_at, processed_at)
        values (?, ?, ?, ?, ?)

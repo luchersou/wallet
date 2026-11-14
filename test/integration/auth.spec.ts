@@ -9,8 +9,8 @@ import { configureApp } from '../../src/shared/infrastructure/http/configure-app
 import { assertGlobalLedgerInvariant } from '../helpers/invariants';
 
 /**
- * Exercita AUTH_MODE=keycloak sem subir o Keycloak: as chaves são geradas no teste
- * e um JWKS local faz o papel do endpoint de certificados do realm.
+ * Exercises AUTH_MODE=keycloak without starting Keycloak: the keys are generated in the test
+ * and a local JWKS plays the role of the realm's certificates endpoint.
  */
 const ISSUER = 'http://issuer.test/realms/jungle';
 const AUDIENCE = 'wallet-api';

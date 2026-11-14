@@ -4,7 +4,7 @@ import { buildPinoHttpOptions } from './logging';
 
 @Module({
   imports: [
-    // forRootAsync: opções lidas no bootstrap (permite LOG_LEVEL=silent nos testes)
+    // forRootAsync: options read at bootstrap (allows LOG_LEVEL=silent in tests)
     LoggerModule.forRootAsync({
       useFactory: () => ({ pinoHttp: buildPinoHttpOptions() }),
     }),

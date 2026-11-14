@@ -31,7 +31,7 @@ export const WalletMapper = {
     });
   },
 
-  /** Só os campos mutáveis do agregado. */
+  /** Only the aggregate's mutable fields. */
   apply(wallet: Wallet, record: WalletRecord): void {
     record.balance = wallet.balance.amount;
     record.version = wallet.version;

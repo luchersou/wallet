@@ -1,5 +1,5 @@
 export enum WagerTransactionKind {
-  Opening = 'OPENING', // interno: crédito de abertura da wallet
+  Opening = 'OPENING', // internal: wallet opening credit
   Bet = 'BET',
   Win = 'WIN',
   Loss = 'LOSS',

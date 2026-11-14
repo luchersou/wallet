@@ -18,10 +18,10 @@ export class PublishOutbox {
   ) {}
 
   /**
-   * Claim com SKIP LOCKED: publishers concorrentes pegam lotes disjuntos.
-   * Envio em lotes de 10 (SendMessageBatch), em sequência para preservar a ordem
-   * por wallet dentro do claim. Se o processo morrer após publicar e antes do commit,
-   * as mensagens voltam e são republicadas com o mesmo eventId (dedup no SQS e no consumidor).
+   * Claim with SKIP LOCKED: concurrent publishers claim disjoint batches.
+   * Sent in batches of 10 (SendMessageBatch), sequentially to preserve the order
+   * per wallet within the claim. If the process dies after publishing and before the commit,
+   * the messages come back and are republished with the same eventId (dedup in SQS and in the consumer).
    */
   async publishBatch(limit: number): Promise<number> {
     const published = await this.runner.run(async () => {

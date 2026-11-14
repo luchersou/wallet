@@ -10,7 +10,7 @@ export interface LedgerEntryState {
   money: Money;
   balanceBefore: Money;
   balanceAfter: Money;
-  /** Versão da wallet produzida por este lançamento (sequência por wallet). */
+  /** Wallet version produced by this entry (sequence per wallet). */
   walletVersion: number;
   createdAt: Date;
 }
@@ -58,7 +58,7 @@ export class WalletLedgerEntry {
     return entry;
   }
 
-  /** Reconstrução a partir da persistência — não revalida. */
+  /** Rehydration from persistence — does not revalidate. */
   static rehydrate(state: LedgerEntryState): WalletLedgerEntry {
     return new WalletLedgerEntry(
       state.id,
