@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
 
-// Silencia o logger padrão do Nest nos testes (em produção os logs saem pelo pino, em JSON)
+// Silences Nest's default logger in tests (in production logs go through pino, as JSON)
 Logger.overrideLogger(false);
 
 /**
- * As suítes de integração e concorrência usam só a infra (Postgres + MiniStack).
- * Se o stack completo estiver ligado, os workers dele consomem as mesmas filas e
- * publicam a mesma outbox que os testes observam. Testes unitários não precisam da checagem.
+ * The integration and concurrency suites use only the infra (Postgres + MiniStack).
+ * If the full stack is running, its workers consume the same queues and
+ * publish the same outbox the tests observe. Unit tests do not need the check.
  */
 const targets = process.argv.filter((arg) => /(^|[\\/])test[\\/]/.test(arg));
 const unitOnly = targets.length > 0 && targets.every((arg) => /test[\\/]unit/.test(arg));
@@ -16,7 +16,7 @@ async function apiContainerIsUp(): Promise<boolean> {
     const res = await fetch('http://localhost:3000/health/live', { signal: AbortSignal.timeout(500) });
     return res.ok;
   } catch {
-    return false; // nada escutando na 3000: ok
+    return false; // nothing listening on 3000: ok
   }
 }
 

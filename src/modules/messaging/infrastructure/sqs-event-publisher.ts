@@ -25,14 +25,14 @@ export class SqsEventPublisher extends EventPublisher {
         Entries: messages.map((m, index) => ({
           Id: String(index),
           MessageBody: JSON.stringify(m.payload),
-          MessageGroupId: m.aggregateId, // ordem por wallet
+          MessageGroupId: m.aggregateId, // order per wallet
           MessageDeduplicationId: m.id, // = eventId
           MessageAttributes: { eventType: { DataType: 'String', StringValue: m.eventType } },
         })),
       }),
     );
 
-    // Falha parcial: o SQS informa entrada por entrada
+    // Partial failure: SQS reports entry by entry
     for (const entry of res.Failed ?? []) {
       const message = messages[Number(entry.Id)];
       if (message) failed.set(message.id, `${entry.Code ?? 'Error'}: ${entry.Message ?? ''}`);

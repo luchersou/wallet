@@ -5,7 +5,7 @@ import { AuthenticationRequiredError } from './auth.errors';
 import { ProviderIdentityPort } from './provider-identity.port';
 import { IS_PUBLIC } from './public.decorator';
 
-/** Guard global: exige identidade válida em toda rota não marcada com @Public(). */
+/** Global guard: requires a valid identity on every route not marked with @Public(). */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

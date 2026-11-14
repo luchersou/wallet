@@ -53,7 +53,7 @@ export const WagerTransactionMapper = {
     return record;
   },
 
-  /** Só os campos mutáveis — o trigger do banco bloqueia o resto. */
+  /** Only the mutable fields — the database trigger blocks the rest. */
   apply(tx: WagerTransaction, record: WagerTransactionRecord): void {
     record.status = tx.status;
     record.referenceTransactionId = tx.referenceTransactionId ?? null;

@@ -95,12 +95,12 @@ describe('ProcessWagerTransaction', () => {
     expect(first.balance.amount).toBe('975.00');
     expect(first.idempotentReplay).toBe(false);
 
-    await s.processWager.execute(wager(w, 'BET', '100.00')); // muda o saldo depois
+    await s.processWager.execute(wager(w, 'BET', '100.00')); // changes the balance afterwards
 
     const replay = await s.processWager.execute({ ...bet, correlationId: uuid() });
     expect(replay.idempotentReplay).toBe(true);
     expect(replay.transactionId).toBe(first.transactionId);
-    expect(replay.balance.amount).toBe('975.00'); // saldo observado naquele momento
+    expect(replay.balance.amount).toBe('975.00'); // balance observed at that moment
     await assertLedgerInvariant(s, w.walletId);
   });
 
@@ -128,7 +128,7 @@ describe('ProcessWagerTransaction', () => {
 
     const wallet = await s.runner.run(() => s.wallets.findById(w.walletId));
     expect(wallet?.balance.amount).toBe('20.00');
-    expect(await countLedger(s, w.walletId)).toBe(2); // opening + 1 débito
+    expect(await countLedger(s, w.walletId)).toBe(2); // opening + 1 debit
     await assertLedgerInvariant(s, w.walletId);
   });
 
@@ -201,7 +201,7 @@ describe('ProcessWagerTransaction', () => {
     const w = await openWallet('0.00');
     const win = wager(w, 'WIN', '50.00');
     await s.processWager.execute(win);
-    await s.processWager.execute(wager(w, 'BET', '50.00')); // jogador gastou o prêmio
+    await s.processWager.execute(wager(w, 'BET', '50.00')); // player spent the winnings
 
     const rollback = await s.processWager.execute(
       wager(w, 'ROLLBACK', '50.00', { referenceExternalTransactionId: win.externalTransactionId }),
@@ -222,7 +222,7 @@ describe('ProcessWagerTransaction', () => {
     expect(await countOutbox(s, 'WagerTransactionPendingReference')).toBe(1);
 
     await s.processWager.execute(wager(w, 'BET', '30.00', { externalTransactionId: betExternalId }));
-    await Bun.sleep(10); // passa o nextReferenceAttemptAt (policy de teste: 5ms)
+    await Bun.sleep(10); // past nextReferenceAttemptAt (test policy: 5ms)
 
     expect(await s.retryPending.execute(refund.transactionId)).toBe('processed');
 
@@ -283,17 +283,17 @@ describe('ProcessWagerTransaction', () => {
     const bet = wager(w, 'BET', '25.00', { source });
     await s.processWager.execute(bet);
 
-    // mesmo messageId e mesma key, valor diferente
+    // same messageId and same key, different amount
     await expect(
       s.processWager.execute({ ...bet, money: { amount: '26.00', currency: 'BRL' } }),
     ).rejects.toThrow(IdempotencyConflictError);
 
-    // mesmo messageId, outra transação inteira
+    // same messageId, an entirely different transaction
     await expect(s.processWager.execute(wager(w, 'BET', '10.00', { source }))).rejects.toThrow(
       IdempotencyConflictError,
     );
 
-    expect(await countLedger(s, w.walletId)).toBe(2); // opening + só o débito original
+    expect(await countLedger(s, w.walletId)).toBe(2); // opening + only the original debit
     await assertLedgerInvariant(s, w.walletId);
   });
 });

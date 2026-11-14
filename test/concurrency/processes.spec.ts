@@ -77,7 +77,7 @@ function betMessage(w: { walletId: string; playerId: string }, amount: string) {
   });
 }
 
-/** groupId aleatório por mensagem: força entrega concorrente para processos diferentes. */
+/** Random groupId per message: forces concurrent delivery to different processes. */
 async function sendAll(bodies: string[]): Promise<void> {
   for (let i = 0; i < bodies.length; i += 10) {
     const chunk = bodies.slice(i, i + 10);
@@ -115,7 +115,7 @@ const betCount = () => scalar(`select count(*)::int as n from wager_transactions
 const statusCount = (status: string) =>
   scalar(`select count(*)::int as n from wager_transactions where kind = 'BET' and status = ?`, [status]);
 
-/** Invariante global: nenhuma wallet com saldo diferente da soma do seu ledger. */
+/** Global invariant: no wallet with a balance different from the sum of its ledger. */
 async function assertAllWalletsConsistent(): Promise<void> {
   const divergent = await scalar(
     `select count(*)::int as n from wallets w
@@ -132,7 +132,7 @@ async function balanceOf(walletId: string): Promise<string> {
   return wallet!.balance.amount;
 }
 
-// ---------- cenários
+// ---------- scenarios
 
 describe('multiple worker processes', () => {
   it('3 processes on a hot wallet: no lost update, no duplicate debit, no negative balance', async () => {
@@ -140,14 +140,14 @@ describe('multiple worker processes', () => {
     const bets = Array.from({ length: 150 }, () => betMessage(w, '10.00'));
 
     workers = await Promise.all([spawnWorker(), spawnWorker(), spawnWorker()]);
-    await sendAll([...bets, ...bets]); // cada mensagem entregue 2x (at-least-once)
+    await sendAll([...bets, ...bets]); // each message delivered 2x (at-least-once)
 
     await waitFor(async () => (await betCount()) === 150 && (await queueDepth(urls.main)) === 0, 90_000, 500);
 
     expect(await statusCount('PROCESSED')).toBe(100);
     expect(await statusCount('REJECTED')).toBe(50);
     expect(await balanceOf(w.walletId)).toBe('0.00');
-    expect(await countLedger(s, w.walletId)).toBe(101); // opening + 100 débitos
+    expect(await countLedger(s, w.walletId)).toBe(101); // opening + 100 debits
     expect(await scalar(`select count(*)::int as n from inbox_messages`)).toBe(150);
     expect(await queueDepth(urls.dlq)).toBe(0);
     await assertAllWalletsConsistent();
@@ -176,14 +176,14 @@ describe('multiple worker processes', () => {
     workers = [chaos];
     await sendAll([betMessage(w, '25.00')]);
 
-    expect(await chaos.proc.exited).toBe(137); // morreu exatamente entre commit e ack
+    expect(await chaos.proc.exited).toBe(137); // died exactly between commit and ack
 
-    // O commit aconteceu; a mensagem continua na fila (não houve ack)
+    // The commit happened; the message is still in the queue (no ack)
     expect(await balanceOf(w.walletId)).toBe('75.00');
     expect(await countLedger(s, w.walletId)).toBe(2);
     expect(await queueDepth(urls.main)).toBe(1);
 
-    // Outra instância assume: a redelivery cai no inbox e vira replay
+    // Another instance takes over: the redelivery hits the inbox and becomes a replay
     workers = [await spawnWorker()];
     await waitFor(async () => (await queueDepth(urls.main)) === 0, 30_000, 500);
 
@@ -200,7 +200,7 @@ describe('multiple worker processes', () => {
     workers = await Promise.all([spawnWorker(), spawnWorker(), spawnWorker()]);
     await sendAll([...bodies, ...bodies]);
 
-    await waitFor(async () => (await betCount()) > 20, 30_000, 100); // deixa processar uma parte
+    await waitFor(async () => (await betCount()) > 20, 30_000, 100); // let part of it be processed
     await killAll(workers, 'SIGKILL');
 
     workers = await Promise.all([spawnWorker(), spawnWorker(), spawnWorker()]);
@@ -214,7 +214,7 @@ describe('multiple worker processes', () => {
   }, 150_000);
 
   it('concurrent outbox publishers in different processes publish every event exactly once', async () => {
-    await Promise.all(Array.from({ length: 40 }, () => openWallet('10.00'))); // 80 eventos na outbox
+    await Promise.all(Array.from({ length: 40 }, () => openWallet('10.00'))); // 80 events in the outbox
     const expected = await scalar(`select count(*)::int as n from outbox_messages`);
     expect(expected).toBe(80);
 
@@ -242,7 +242,7 @@ describe('multiple worker processes', () => {
     await assertAllWalletsConsistent();
   }, 120_000);
 
-  // No Windows não existe SIGTERM real (o Bun usa TerminateProcess); roda em Linux/macOS e no Docker
+  // There is no real SIGTERM on Windows (Bun uses TerminateProcess); runs on Linux/macOS and in Docker
   it.skipIf(process.platform === 'win32')(
     'SIGTERM drains in-flight work; nothing is lost after restart',
     async () => {

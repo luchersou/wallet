@@ -20,7 +20,7 @@ export async function waitFor(
   throw new Error(`condition not met within ${timeoutMs}ms`);
 }
 
-/** Sobe um processo real do worker (main.worker.ts) e espera o /health/live responder. */
+/** Starts a real worker process (main.worker.ts) and waits for /health/live to respond. */
 export async function spawnWorker(extraEnv: Record<string, string> = {}): Promise<WorkerProcess> {
   const port = nextPort++;
   const logs = process.env.TEST_WORKER_LOGS ? 'inherit' : 'ignore';

@@ -75,7 +75,7 @@ export class WagerTransaction {
   public readonly gameId: string;
   public readonly kind: Kind;
   public readonly money: Money;
-  /** id no provedor — não o id interno */
+  /** id at the provider — not the internal id */
   public readonly referenceExternalTransactionId: string | undefined;
   public readonly createdAt: Date;
 
@@ -112,7 +112,7 @@ export class WagerTransaction {
     this._processedAt = state.processedAt;
   }
 
-  /** Nasce em PENDING. Valida a exigência de referência por kind. */
+  /** Starts as PENDING. Validates the reference requirement per kind. */
   static create(props: CreateWagerTransactionProps): WagerTransaction {
     const required: (keyof CreateWagerTransactionProps)[] = [
       'id', 'providerId', 'externalTransactionId', 'idempotencyKey',
@@ -172,7 +172,7 @@ export class WagerTransaction {
     });
   }
 
-  /** Transação interna de abertura, já aplicada. */
+  /** Internal opening transaction, already applied. */
   static createOpening(props: CreateOpeningProps): WagerTransaction {
     const externalId = `opening:${props.walletId}`;
     const tx = WagerTransaction.create({
@@ -207,7 +207,7 @@ export class WagerTransaction {
   get updatedAt(): Date { return this._updatedAt; }
   get processedAt(): Date | undefined { return this._processedAt; }
 
-  // ---- transições
+  // ---- transitions
   markProcessed(referenceTransactionId: string | undefined, observedBalance: Money, at: Date): void {
     this.assertTransition(Status.Processed, [Status.Pending, Status.PendingReference]);
     if (this.requiresReference() && !referenceTransactionId) {
@@ -258,7 +258,7 @@ export class WagerTransaction {
     this._updatedAt = at;
   }
 
-  // ---- consultas
+  // ---- queries
   isTerminal(): boolean {
     return TERMINAL.has(this._status);
   }

@@ -35,7 +35,7 @@ const num = (value: string | undefined, fallback: number): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-/** Lido no bootstrap (não no import), para permitir ajuste nos testes. */
+/** Read at bootstrap (not at import), to allow tuning in tests. */
 export function readConsumerOptions(): ConsumerOptions {
   return {
     maxMessages: 10,
@@ -61,7 +61,7 @@ function classify(err: unknown): Failure {
   if (err instanceof ZodError) return { kind: 'permanent', reason: 'INVALID_MESSAGE', detail };
   if (err instanceof DomainError) return { kind: 'permanent', reason: err.code, detail };
   if (err instanceof TransientInfrastructureError) return { kind: 'transient', reason: 'TRANSIENT', detail };
-  return { kind: 'transient', reason: 'UNEXPECTED', detail }; // limitado por maxReceiveCount
+  return { kind: 'transient', reason: 'UNEXPECTED', detail }; // bounded by maxReceiveCount
 }
 
 @Injectable()
@@ -89,7 +89,7 @@ export class WagerTransactionConsumer {
     this.loop = this.run();
   }
 
-  /** SIGTERM: para de buscar, conclui as mensagens em andamento e devolve as não iniciadas. */
+  /** SIGTERM: stops fetching, finishes in-flight messages and returns the ones not yet started. */
   async stop(timeoutMs: number): Promise<void> {
     this.stopping = true;
     this.running = false;
@@ -97,7 +97,7 @@ export class WagerTransactionConsumer {
     await Promise.race([this.loop ?? Promise.resolve(), Bun.sleep(timeoutMs)]);
   }
 
-  /** Uma rodada de receive + processamento. Exposto para testes determinísticos. */
+  /** One round of receive + processing. Exposed for deterministic tests. */
   async pollOnce(): Promise<number> {
     const queueUrl = await this.mainQueueUrl();
     this.abort = new AbortController();
@@ -117,7 +117,7 @@ export class WagerTransactionConsumer {
     const messages = response.Messages ?? [];
     if (messages.length === 0) return 0;
 
-    // Ordem dentro do grupo (wallet), paralelismo entre grupos
+    // Order within the group (wallet), parallelism across groups
     const groups = new Map<string, Message[]>();
     for (const message of messages) {
       const group = message.Attributes?.MessageGroupId ?? message.MessageId ?? 'default';
@@ -133,7 +133,7 @@ export class WagerTransactionConsumer {
       try {
         await this.pollOnce();
       } catch (err) {
-        if (!this.running) break; // abort do long polling no shutdown
+        if (!this.running) break; // long polling aborted on shutdown
         this.logger.error('poll failed', err instanceof Error ? err.stack : String(err));
         await Bun.sleep(1_000);
       }
@@ -148,15 +148,15 @@ export class WagerTransactionConsumer {
       }
       const settled = await this.handle(messages[i]!);
       if (!settled) {
-        // A mensagem foi reagendada: as seguintes do grupo voltam para a fila sem serem processadas.
-        // O FIFO só as entrega de novo depois dela, e a ordem dentro do grupo se mantém.
+        // The message was rescheduled: the following ones in the group go back to the queue unprocessed.
+        // FIFO only redelivers them after it, so the order within the group is preserved.
         await this.releaseAll(messages.slice(i + 1));
         return;
       }
     }
   }
 
-  /** true se a mensagem saiu da fila (ack ou DLQ); false se foi reagendada para retry. */
+  /** true if the message left the queue (ack or DLQ); false if it was rescheduled for retry. */
   private handle(message: Message): Promise<boolean> {
     return LogContext.run({ messageId: message.MessageId }, () => this.handleInContext(message));
   }
@@ -192,13 +192,13 @@ export class WagerTransactionConsumer {
       this.metrics.transactionCompleted(result.status, 'sqs', (performance.now() - startedAt) / 1000);
       if (result.idempotentReplay) this.metrics.duplicateDetected('sqs');
 
-      // Fault injection (somente testes): simula o processo morrendo após o commit e antes do ack
+      // Fault injection (tests only): simulates the process dying after the commit and before the ack
       if (process.env.CHAOS_EXIT_BEFORE_ACK === 'true') {
         this.logger.warn('CHAOS: exiting after commit, before ack');
         process.exit(137);
       }
 
-      // execute() só retorna depois do commit: ack é sempre pós-commit
+      // execute() only returns after the commit: ack is always post-commit
       await this.ack(message);
       return true;
     } catch (err) {
@@ -244,7 +244,7 @@ export class WagerTransactionConsumer {
     await Promise.all(messages.map((m) => this.changeVisibility(m, 0).catch(() => undefined)));
   }
 
-  /** Envia à DLQ com o motivo e só então remove da fila principal. */
+  /** Sends to the DLQ with the reason and only then removes it from the main queue. */
   private async deadLetter(message: Message, reason: string, detail: string, receiveCount: number): Promise<void> {
     await this.sqs.send(
       new SendMessageCommand({

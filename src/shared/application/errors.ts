@@ -1,4 +1,4 @@
-/** Violação de unicidade no banco — normalmente corrida entre requisições concorrentes. */
+/** Unique constraint violation in the database — usually a race between concurrent requests. */
 export class UniqueConstraintConflictError extends Error {
   constructor(cause: unknown) {
     super('Unique constraint conflict', { cause });
@@ -6,7 +6,7 @@ export class UniqueConstraintConflictError extends Error {
   }
 }
 
-/** Falha temporária de infraestrutura: pode ser reenviada. */
+/** Temporary infrastructure failure: can be retried. */
 export class TransientInfrastructureError extends Error {
   constructor(message: string, cause: unknown) {
     super(message, { cause });

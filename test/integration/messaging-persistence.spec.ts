@@ -100,7 +100,7 @@ describe('outbox', () => {
     const claim = () =>
       runner.run(async () => {
         const batch = await outbox.claimDue(new Date(), 5);
-        await Bun.sleep(300); // segura os locks enquanto o outro tenta
+        await Bun.sleep(300); // hold the locks while the other one tries
         for (const m of batch) {
           m.markPublished(new Date());
           await outbox.save(m);

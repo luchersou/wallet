@@ -43,33 +43,33 @@ export class ProcessWagerTransaction {
   ) {}
 
     async execute(cmd: SubmitWagerCommand): Promise<WagerResult> {
-    LogContext.assign({
-      correlationId: cmd.correlationId,
-      providerId: cmd.providerId,
-      walletId: cmd.walletId,
-    });
+      LogContext.assign({
+        correlationId: cmd.correlationId,
+        providerId: cmd.providerId,
+        walletId: cmd.walletId,
+      });
 
-    // Contrato validado fora da transação: payload inválido nunca abre transação
-    const hash = this.validate(cmd);
+      // Contract validated outside the transaction: an invalid payload never opens a transaction
+      const hash = this.validate(cmd);
 
-    let result: WagerResult;
-    try {
-      result = await this.runner.run(() => this.handle(cmd, hash));
-    } catch (err) {
-      if (!(err instanceof UniqueConstraintConflictError)) throw err;
-      // Corrida rara (mesma key em wallets distintas): a 2ª tentativa vira replay ou conflito
-      this.metrics.lockConflict('unique_race');
-      result = await this.runner.run(() => this.handle(cmd, hash));
-    }
+      let result: WagerResult;
+      try {
+        result = await this.runner.run(() => this.handle(cmd, hash));
+      } catch (err) {
+        if (!(err instanceof UniqueConstraintConflictError)) throw err;
+        // Rare race (same key on different wallets): the 2nd attempt becomes a replay or a conflict
+        this.metrics.lockConflict('unique_race');
+        result = await this.runner.run(() => this.handle(cmd, hash));
+      }
 
-    LogContext.assign({ transactionId: result.transactionId });
-    this.logger.log({
-      msg: 'wager_transaction_completed',
-      kind: cmd.kind,
-      status: result.status,
-      failureCode: result.failureCode,
-      idempotentReplay: result.idempotentReplay,
-    });
+      LogContext.assign({ transactionId: result.transactionId });
+      this.logger.log({
+        msg: 'wager_transaction_completed',
+        kind: cmd.kind,
+        status: result.status,
+        failureCode: result.failureCode,
+        idempotentReplay: result.idempotentReplay,
+      });
     return result;
   }
 
@@ -84,7 +84,7 @@ export class ProcessWagerTransaction {
       throw new InvalidWagerTransactionError('providerId is reserved');
     }
     const hash = wagerPayloadHash(cmd);
-    this.buildTransaction(cmd, hash, this.clock.now()); // valida as regras de criação
+    this.buildTransaction(cmd, hash, this.clock.now()); // validates the creation rules
     return hash;
   }
 
@@ -102,7 +102,7 @@ export class ProcessWagerTransaction {
 
       const registered = await this.inbox.tryRegister(message);
       if (!registered) {
-        // Mesmo messageId já processado: só é replay se o conteúdo for idêntico
+        // Same messageId already processed: it is only a replay if the content is identical
         const previous = await this.inbox.find(cmd.source.consumerName, cmd.source.messageId);
         if (previous && previous.payloadHash !== hash) {
           throw new IdempotencyConflictError(

@@ -14,7 +14,7 @@ import { WagerTransactionProcessor } from '../../src/modules/wagering/applicatio
 import { ReferenceRetryPolicy } from '../../src/modules/wagering/domain/reference-retry-policy';
 import { NoopMetrics } from '../../src/shared/application/ports/metrics.port';
 
-/** Monta os casos de uso sem Nest, contra Postgres real. */
+/** Builds the use cases without Nest, against a real Postgres. */
 export function buildServices(orm: MikroORM, policy = new ReferenceRetryPolicy(3, 5, 20)) {
   const runner = new MikroOrmTransactionRunner(orm.em);
   const wallets = new MikroOrmWalletRepository(orm.em);
@@ -36,7 +36,7 @@ export function buildServices(orm: MikroORM, policy = new ReferenceRetryPolicy(3
 
 export type Services = ReturnType<typeof buildServices>;
 
-/** Invariante final: wallet.balance == saldo reconstruído pelo ledger. */
+/** Final invariant: wallet.balance == balance rebuilt from the ledger. */
 export async function assertLedgerInvariant(s: Services, walletId: string): Promise<void> {
   const { wallet, totals } = await s.runner.run(async () => {
     const wallet = await s.wallets.findById(walletId);

@@ -1,8 +1,8 @@
 import type { MikroORM } from '@mikro-orm/core';
 
 /**
- * Invariante final do enunciado: wallet.balance == saldo reconstruído pelo ledger,
- * para TODAS as wallets do banco, e nenhum saldo negativo.
+ * Final invariant from the spec: wallet.balance == balance rebuilt from the ledger,
+ * for ALL wallets in the database, and no negative balance.
  */
 export async function assertGlobalLedgerInvariant(orm: MikroORM): Promise<void> {
   const divergent = (await orm.em.getConnection().execute(

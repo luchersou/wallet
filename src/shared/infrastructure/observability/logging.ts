@@ -3,7 +3,7 @@ import pino, { type LoggerOptions } from 'pino';
 import type { Options as PinoHttpOptions } from 'pino-http';
 import { LogContext } from '../../observability/log-context';
 
-/** Defensivo: o corpo nunca é logado, mas campos financeiros e credenciais são mascarados se aparecerem. */
+/** Defensive: the body is never logged, but financial fields and credentials are masked if they show up. */
 const REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers.cookie',
@@ -40,7 +40,7 @@ export function buildPinoHttpOptions(): PinoHttpOptions {
         return url.startsWith('/health') || url.startsWith('/metrics');
       },
     },
-    // Só metadados da requisição: nunca corpo nem headers completos
+    // Request metadata only: never the body or full headers
     serializers: {
       req: (req: Req) => ({ method: req.method, url: req.originalUrl ?? req.url }),
       res: (res: ServerResponse) => ({ statusCode: res.statusCode }),

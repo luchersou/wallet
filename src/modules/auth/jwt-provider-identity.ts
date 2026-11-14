@@ -4,7 +4,7 @@ import { ProviderIdentityPort, type AuthIdentity } from './provider-identity.por
 
 const BEARER = /^Bearer\s+(.+)$/i;
 
-/** Valida tokens do Keycloak localmente: assinatura (JWKS com cache), iss, aud e exp. */
+/** Validates Keycloak tokens locally: signature (cached JWKS), iss, aud and exp. */
 export class JwtProviderIdentity extends ProviderIdentityPort {
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
 
@@ -34,8 +34,8 @@ export class JwtProviderIdentity extends ProviderIdentityPort {
         providerId: typeof payload.provider_id === 'string' ? payload.provider_id : undefined,
       };
     } catch (err) {
-      // Token inválido (assinatura, expiração, iss, aud...) → 401.
-      // Não conseguir buscar as chaves é falha de infraestrutura → 503.
+      // Invalid token (signature, expiration, iss, aud...) → 401.
+      // Failing to fetch the keys is an infrastructure failure → 503.
       if (err instanceof errors.JWKSTimeout || !(err instanceof errors.JOSEError)) {
         throw new TransientInfrastructureError('Unable to fetch identity provider signing keys', err);
       }

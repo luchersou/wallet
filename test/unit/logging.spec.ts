@@ -21,7 +21,7 @@ describe('structured logging', () => {
 
     await LogContext.run({ correlationId: 'corr-1', messageId: 'msg-1' }, async () => {
       LogContext.assign({ transactionId: 'tx-1', walletId: 'w-1', providerId: 'provider-a' });
-      await Bun.sleep(1); // atravessa uma fronteira assíncrona
+      await Bun.sleep(1); // crosses an async boundary
       logger.info({ status: 'PROCESSED' }, 'wager_transaction_completed');
     });
 

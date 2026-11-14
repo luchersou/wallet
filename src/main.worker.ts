@@ -4,7 +4,7 @@ import { env } from './config/env';
 import { configureApp } from './shared/infrastructure/http/configure-app';
 import { WorkerModule } from './worker.module';
 
-/** Processo do worker: só expõe /health e /metrics; o trabalho roda nos loops. */
+/** Worker process: only exposes /health and /metrics; the work runs in the loops. */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(WorkerModule);
   configureApp(app);

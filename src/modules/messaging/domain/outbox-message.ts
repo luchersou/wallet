@@ -29,7 +29,7 @@ export class OutboxMessage {
     private _lastError?: string,
   ) {}
 
-  /** id da outbox = eventId: chave de dedup no SQS e no consumidor. */
+  /** outbox id = eventId: dedup key in SQS and in the consumer. */
   static enqueue(event: IntegrationEvent<unknown>): OutboxMessage {
     return new OutboxMessage(
       event.eventId,
@@ -70,7 +70,7 @@ export class OutboxMessage {
     this._lastError = undefined;
   }
 
-  /** Incrementa attempts e agenda com backoff exponencial (1s → teto 60s). */
+  /** Increments attempts and schedules with exponential backoff (1s → 60s cap). */
   scheduleRetry(now: Date, error?: string): void {
     if (!this.isPending()) {
       throw new InvariantViolationError(`outbox message ${this.id} already published`);

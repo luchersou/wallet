@@ -1,10 +1,10 @@
 import type { OutboxMessage } from '../../domain/outbox-message';
 
-/** Até 10 mensagens por chamada (limite do SendMessageBatch). */
+/** Up to 10 messages per call (SendMessageBatch limit). */
 export const PUBLISH_BATCH_LIMIT = 10;
 
 export interface PublishBatchResult {
-  /** id da outbox → motivo da falha. Ausente = publicada. */
+  /** outbox id → failure reason. Absent = published. */
   failed: Map<string, string>;
 }
 

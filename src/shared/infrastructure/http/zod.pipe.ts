@@ -11,7 +11,7 @@ export class ZodPipe<T> implements PipeTransform<unknown, T> {
 
 export const UuidSchema = z.uuid();
 
-/** Formato estrutural; escala, sinal e moeda são validados pelo Money.from. */
+/** Structural format; scale, sign and currency are validated by Money.from. */
 export const MoneySchema = z.object({
   amount: z.string(),
   currency: z.string(),

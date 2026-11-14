@@ -3,7 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { MikroORM } from '@mikro-orm/postgresql';
 import config from '../../mikro-orm.config';
 
-// ---------- configuração
+// ---------- configuration
 
 const num = (v: string | undefined, d: number) => (v && Number.isFinite(Number(v)) ? Number(v) : d);
 
@@ -30,9 +30,9 @@ interface Sample {
   kind: 'BET' | 'WIN' | 'REPLAY';
 }
 
-// ---------- helpers HTTP / métricas
+// ---------- HTTP / metrics helpers
 
-/** Client credentials no Keycloak. Sem Keycloak (AUTH_MODE=disabled), segue sem token. */
+/** Client credentials in Keycloak. Without Keycloak (AUTH_MODE=disabled), proceeds without a token. */
 async function fetchToken(clientId: string, secret: string): Promise<string | undefined> {
   try {
     const res = await fetch(TOKEN_URL, {
@@ -64,7 +64,7 @@ async function scrapeMetrics(): Promise<string> {
   return (await fetch(`${BASE_URL}/metrics`)).text();
 }
 
-/** Soma todas as séries de uma métrica (todas as combinações de labels). */
+/** Sums all series of a metric (all label combinations). */
 function metricSum(text: string, name: string): number {
   return text
     .split('\n')
@@ -72,7 +72,7 @@ function metricSum(text: string, name: string): number {
     .reduce((acc, line) => acc + Number(line.trim().split(/\s+/).pop()), 0);
 }
 
-/** Quantil aproximado a partir dos buckets cumulativos de um histograma (delta antes/depois). */
+/** Approximate quantile from a histogram's cumulative buckets (before/after delta). */
 function histogramQuantile(before: string, after: string, name: string, q: number): number | null {
   const buckets = (text: string) =>
     new Map(
@@ -100,7 +100,7 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)]!;
 }
 
-// ---------- execução
+// ---------- execution
 
 async function createWallet(amount: string): Promise<WalletRef> {
   const playerId = uuid();
@@ -126,7 +126,7 @@ async function main(): Promise<void> {
   const samples: Sample[] = [];
   let networkErrors = 0;
 
-  // Amostragem do outbox lag durante a carga
+  // Outbox lag sampling during the load
   let maxLagSeconds = 0;
   let maxPending = 0;
   const sampler = setInterval(async () => {
@@ -139,7 +139,7 @@ async function main(): Promise<void> {
       maxPending = Math.max(maxPending, rows[0]?.pending ?? 0);
       maxLagSeconds = Math.max(maxLagSeconds, rows[0]?.lag ?? 0);
     } catch {
-      // amostragem é best-effort
+      // sampling is best-effort
     }
   }, 500);
 
@@ -199,7 +199,7 @@ async function main(): Promise<void> {
   const elapsedS = (performance.now() - startedAt) / 1000;
   const metricsAfter = await scrapeMetrics();
 
-  // Drenagem da outbox (workers publicando)
+  // Outbox drain (workers publishing)
   const drainStartedAt = performance.now();
   let drainSeconds: number | null = null;
   while (performance.now() - drainStartedAt < 120_000) {
@@ -214,7 +214,7 @@ async function main(): Promise<void> {
   }
   clearInterval(sampler);
 
-  // Prova de consistência
+  // Consistency check
   console.log('verifying consistency ...');
   let inconsistent = 0;
   for (const w of allWallets) {
@@ -231,7 +231,7 @@ async function main(): Promise<void> {
 
   await orm.close(true);
 
-  // ---------- análise
+  // ---------- analysis
 
   const latencies = samples.map((s) => s.latencyMs).sort((a, b) => a - b);
   const byStatus = samples.reduce<Record<string, number>>((acc, s) => {

@@ -32,7 +32,7 @@ export class MikroOrmWalletRepository extends WalletRepository {
   }
 
   async save(wallet: Wallet): Promise<void> {
-    // Já está no identity map após o findByIdForUpdate: não gera novo SELECT.
+    // Already in the identity map after findByIdForUpdate: no new SELECT is issued.
     const record = await this.em.findOneOrFail(WalletRecord, { id: wallet.id });
     WalletMapper.apply(wallet, record);
     await this.em.flush();

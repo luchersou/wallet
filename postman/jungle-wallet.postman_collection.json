@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Jungle Wallet",
-    "description": "Rode as pastas em ordem: 00 (tokens, valem 5 min) → 01 → 02 (cria a wallet) → 03 → 04 → 05 → 06.\nOs ids externos usam {{walletId}}: cada wallet nova gera ids únicos automaticamente.",
+    "description": "Run the folders in order: 00 (tokens, valid for 5 min) → 01 → 02 (creates the wallet) → 03 → 04 → 05 → 06.\nExternal ids use {{walletId}}: each new wallet generates unique ids automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -222,7 +222,7 @@
       },
       "item": [
         {
-          "name": "Criar wallet",
+          "name": "Create wallet",
           "request": {
             "method": "POST",
             "header": [
@@ -264,7 +264,7 @@
           ]
         },
         {
-          "name": "Consultar wallet",
+          "name": "Get wallet",
           "request": {
             "method": "GET",
             "header": [],
@@ -280,7 +280,7 @@
           }
         },
         {
-          "name": "Reconciliação",
+          "name": "Reconciliation",
           "request": {
             "method": "POST",
             "header": [],
@@ -288,7 +288,7 @@
           }
         },
         {
-          "name": "Wallet duplicada (409)",
+          "name": "Duplicate wallet (409)",
           "request": {
             "method": "POST",
             "header": [
@@ -307,13 +307,13 @@
                 }
               }
             },
-            "description": "Reusa o playerId da última wallet criada: tem que dar 409."
+            "description": "Reuses the playerId of the last created wallet: must return 409."
           }
         }
       ]
     },
     {
-      "name": "03 - Wagering: fluxo feliz",
+      "name": "03 - Wagering: happy path",
       "auth": {
         "type": "bearer",
         "bearer": [
@@ -364,7 +364,7 @@
           ]
         },
         {
-          "name": "BET de novo (replay → idempotentReplay: true)",
+          "name": "BET again (replay → idempotentReplay: true)",
           "request": {
             "method": "POST",
             "header": [
@@ -402,7 +402,7 @@
           ]
         },
         {
-          "name": "WIN (referencia a BET)",
+          "name": "WIN (references the BET)",
           "request": {
             "method": "POST",
             "header": [
@@ -440,7 +440,7 @@
           ]
         },
         {
-          "name": "LOSS (não move saldo)",
+          "name": "LOSS (does not move the balance)",
           "request": {
             "method": "POST",
             "header": [
@@ -478,7 +478,7 @@
           ]
         },
         {
-          "name": "REFUND da BET",
+          "name": "REFUND of the BET",
           "request": {
             "method": "POST",
             "header": [
@@ -516,7 +516,7 @@
           ]
         },
         {
-          "name": "ROLLBACK do WIN",
+          "name": "ROLLBACK of the WIN",
           "request": {
             "method": "POST",
             "header": [
@@ -554,7 +554,7 @@
           ]
         },
         {
-          "name": "Consultar BET pelo id do provedor",
+          "name": "Get BET by provider id",
           "request": {
             "method": "GET",
             "header": [],
@@ -562,7 +562,7 @@
           }
         },
         {
-          "name": "Consultar última transação pelo id interno",
+          "name": "Get last transaction by internal id",
           "request": {
             "method": "GET",
             "header": [],
@@ -572,7 +572,7 @@
       ]
     },
     {
-      "name": "04 - Wagering: rejeições e erros",
+      "name": "04 - Wagering: rejections and errors",
       "auth": {
         "type": "bearer",
         "bearer": [
@@ -583,10 +583,10 @@
           }
         ]
       },
-      "description": "Rode depois da pasta 03, com a mesma wallet.",
+      "description": "Run after folder 03, with the same wallet.",
       "item": [
         {
-          "name": "Saldo insuficiente (422)",
+          "name": "Insufficient balance (422)",
           "request": {
             "method": "POST",
             "header": [
@@ -624,7 +624,7 @@
           ]
         },
         {
-          "name": "Conflito de idempotência (409)",
+          "name": "Idempotency conflict (409)",
           "request": {
             "method": "POST",
             "header": [
@@ -647,7 +647,7 @@
                 }
               }
             },
-            "description": "Mesma key e mesmo id externo do BET da pasta 03, com valor diferente."
+            "description": "Same key and same external id as the BET in folder 03, with a different amount."
           },
           "event": [
             {
@@ -663,7 +663,7 @@
           ]
         },
         {
-          "name": "Reversão duplicada (422 REFERENCE_ALREADY_REVERSED)",
+          "name": "Duplicate reversal (422 REFERENCE_ALREADY_REVERSED)",
           "request": {
             "method": "POST",
             "header": [
@@ -686,7 +686,7 @@
                 }
               }
             },
-            "description": "A BET já foi revertida pelo REFUND da pasta 03."
+            "description": "The BET was already reversed by the REFUND in folder 03."
           },
           "event": [
             {
@@ -702,7 +702,7 @@
           ]
         },
         {
-          "name": "Valor inválido (400 INVALID_MONEY)",
+          "name": "Invalid amount (400 INVALID_MONEY)",
           "request": {
             "method": "POST",
             "header": [
@@ -740,7 +740,7 @@
           ]
         },
         {
-          "name": "Sem Idempotency-Key (400)",
+          "name": "Missing Idempotency-Key (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -774,7 +774,7 @@
           ]
         },
         {
-          "name": "Wallet inexistente (404)",
+          "name": "Nonexistent wallet (404)",
           "request": {
             "method": "POST",
             "header": [
@@ -812,7 +812,7 @@
           ]
         },
         {
-          "name": "OPENING pela API (400)",
+          "name": "OPENING via the API (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -852,7 +852,7 @@
       ]
     },
     {
-      "name": "05 - Referência fora de ordem",
+      "name": "05 - Out-of-order reference",
       "auth": {
         "type": "bearer",
         "bearer": [
@@ -863,10 +863,10 @@
           }
         ]
       },
-      "description": "Rode em sequência: cria uma wallet nova, manda o REFUND antes da BET e confere que o worker resolveu.",
+      "description": "Run in sequence: creates a new wallet, sends the REFUND before the BET and checks that the worker resolved it.",
       "item": [
         {
-          "name": "1. Criar wallet nova",
+          "name": "1. Create new wallet",
           "request": {
             "method": "POST",
             "header": [
@@ -918,7 +918,7 @@
           ]
         },
         {
-          "name": "2. REFUND antes da BET (202 PENDING_REFERENCE)",
+          "name": "2. REFUND before the BET (202 PENDING_REFERENCE)",
           "request": {
             "method": "POST",
             "header": [
@@ -956,7 +956,7 @@
           ]
         },
         {
-          "name": "3. BET chega depois (200)",
+          "name": "3. BET arrives later (200)",
           "request": {
             "method": "POST",
             "header": [
@@ -994,12 +994,12 @@
           ]
         },
         {
-          "name": "4. Consultar o REFUND (PROCESSED)",
+          "name": "4. Get the REFUND (PROCESSED)",
           "request": {
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/providers/provider-a/wagering/transactions/early-refund-{{walletId}}",
-            "description": "O script espera 2s antes de enviar, para o worker reprocessar a pendência."
+            "description": "The script waits 2s before sending, so the worker can reprocess the pending transaction."
           },
           "event": [
             {
@@ -1016,7 +1016,7 @@
       ]
     },
     {
-      "name": "06 - Segurança",
+      "name": "06 - Security",
       "auth": {
         "type": "bearer",
         "bearer": [
@@ -1029,7 +1029,7 @@
       },
       "item": [
         {
-          "name": "Criar wallet sem token (401)",
+          "name": "Create wallet without token (401)",
           "request": {
             "method": "POST",
             "header": [
@@ -1054,7 +1054,7 @@
           }
         },
         {
-          "name": "Token inválido (401)",
+          "name": "Invalid token (401)",
           "request": {
             "method": "GET",
             "header": [],
@@ -1072,7 +1072,7 @@
           }
         },
         {
-          "name": "provider-a agindo como provider-b (403)",
+          "name": "provider-a acting as provider-b (403)",
           "request": {
             "method": "POST",
             "header": [
@@ -1110,7 +1110,7 @@
           ]
         },
         {
-          "name": "Backoffice submetendo aposta (403)",
+          "name": "Backoffice submitting a bet (403)",
           "request": {
             "method": "POST",
             "header": [
@@ -1158,7 +1158,7 @@
           ]
         },
         {
-          "name": "provider-b consultando provider-a (403)",
+          "name": "provider-b querying provider-a (403)",
           "request": {
             "method": "GET",
             "header": [],

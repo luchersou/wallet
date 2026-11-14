@@ -18,7 +18,7 @@ export interface IntegrationEventEnvelope<T> {
   data: T;
 }
 
-/** Contexto comum para criar eventos dentro de um caso de uso. */
+/** Common context for creating events within a use case. */
 export interface EventContext {
   correlationId: string;
   causationId?: string;

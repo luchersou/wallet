@@ -19,8 +19,8 @@ import { MikroOrmInboxRepository } from '../modules/messaging/infrastructure/per
 import { MikroOrmOutboxRepository } from '../modules/messaging/infrastructure/persistence/mikro-orm-outbox.repository';
 
 /**
- * Infra compartilhada: ORM, repositórios (ports → adapters), runner, relógio e ids.
- * Global para evitar dependências circulares entre módulos de feature.
+ * Shared infra: ORM, repositories (ports → adapters), runner, clock and ids.
+ * Global to avoid circular dependencies between feature modules.
  */
 @Global()
 @Module({

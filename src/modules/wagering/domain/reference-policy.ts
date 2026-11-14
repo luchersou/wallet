@@ -15,13 +15,13 @@ const ALLOWED_REFERENCE_KINDS: Partial<Record<Kind, readonly Kind[]>> = {
 };
 
 export interface ReferenceContext {
-  /** Já existe reversão PROCESSED apontando para a referência? (consultado pelo use case) */
+  /** Is there already a PROCESSED reversal pointing to the reference? (looked up by the use case) */
   alreadyReversed: boolean;
 }
 
 /**
- * Regras da seção 7, sem I/O. A referência é buscada por
- * (providerId, referenceExternalTransactionId) antes de chamar esta função.
+ * Section 7 rules, without I/O. The reference is looked up by
+ * (providerId, referenceExternalTransactionId) before calling this function.
  */
 export function evaluateReference(
   tx: WagerTransaction,

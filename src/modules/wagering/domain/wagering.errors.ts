@@ -2,7 +2,7 @@ import { DomainError } from '../../../shared/domain/domain-error';
 import { FailureCode } from '../../../shared/domain/failure-code';
 import { InvariantViolationError } from '../../../shared/domain/invariant-violation.error';
 
-/** Payload que viola o contrato da transação (400). */
+/** Payload that violates the transaction contract (400). */
 export class InvalidWagerTransactionError extends DomainError {
   readonly code = FailureCode.InvalidPayload;
 
@@ -11,7 +11,7 @@ export class InvalidWagerTransactionError extends DomainError {
   }
 }
 
-/** Mesma identidade (key ou messageId), payload diferente (409 / DLQ). */
+/** Same identity (key or messageId), different payload (409 / DLQ). */
 export class IdempotencyConflictError extends DomainError {
   readonly code = FailureCode.IdempotencyConflict;
 
@@ -23,7 +23,7 @@ export class IdempotencyConflictError extends DomainError {
   }
 }
 
-/** Erro de programação: transição a partir de estado terminal ou não permitido. */
+/** Programming error: transition from a terminal or disallowed state. */
 export class InvalidTransactionStateError extends InvariantViolationError {
   constructor(transactionId: string, from: string, to: string) {
     super(`Transaction ${transactionId} cannot transition from ${from} to ${to}`);

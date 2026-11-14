@@ -27,7 +27,7 @@ export class ReconcileWallet {
   ) {}
 
   async execute(walletId: string): Promise<ReconciliationView> {
-    // Lock breve: saldo e soma do ledger lidos no mesmo instante lógico
+    // Brief lock: balance and ledger sum read at the same logical instant
     const { wallet, totals } = await this.runner.run(async () => {
       const wallet = await this.wallets.findByIdForUpdate(walletId);
       if (!wallet) throw new WalletNotFoundError(walletId);
@@ -38,7 +38,7 @@ export class ReconcileWallet {
     const consistent = difference.isZero();
 
     if (!consistent) {
-      // Nunca corrigido silenciosamente: logado, contabilizado em métrica e sinalizado na resposta
+      // Never silently corrected: logged, counted in a metric and flagged in the response
       this.metrics.reconciliationDivergence();
       this.logger.error({
         msg: 'wallet_reconciliation_divergence',

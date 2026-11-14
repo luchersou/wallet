@@ -137,13 +137,13 @@ describe('SQS consumer', () => {
   it('deduplicates redelivery of the same messageId through the inbox', async () => {
     const w = await openWallet('100.00');
     const body = JSON.stringify(envelope(w, 'BET', '10.00'));
-    await send(body, w.walletId); // dedup ids diferentes: o SQS entrega as duas
+    await send(body, w.walletId); // different dedup ids: SQS delivers both
     await send(body, w.walletId);
 
     await pollUntilDrained(app.get(WagerTransactionConsumer));
 
     expect(await queueDepth(urls.main)).toBe(0);
-    expect(await countLedger(s, w.walletId)).toBe(2); // opening + 1 débito
+    expect(await countLedger(s, w.walletId)).toBe(2); // opening + 1 debit
   });
 
   it('acks business rejections (terminal) without DLQ', async () => {
@@ -191,9 +191,9 @@ describe('SQS consumer', () => {
     const w = await openWallet('10.00');
     await send(JSON.stringify(envelope(w, 'BET', '1.00')), w.walletId);
 
-    await consumer.pollOnce(); // 1ª tentativa: retry (visibilidade 0)
+    await consumer.pollOnce(); // 1st attempt: retry (visibility 0)
     expect(await queueDepth(urls.dlq)).toBe(0);
-    await consumer.pollOnce(); // 2ª tentativa: atinge o limite → DLQ
+    await consumer.pollOnce(); // 2nd attempt: hits the limit → DLQ
 
     const dead = await receive(urls.dlq);
     expect(dead[0]?.MessageAttributes?.failureReason?.StringValue).toBe('RETRIES_EXHAUSTED');
@@ -227,15 +227,15 @@ describe('SQS consumer', () => {
     await send(JSON.stringify(first), w.walletId);
     await send(JSON.stringify(second), w.walletId);
 
-    expect(await consumer.pollOnce()).toBe(2); // as duas chegaram no mesmo lote
-    expect(seen).toEqual([first.data.externalTransactionId]); // a segunda não foi processada
-    expect(await queueDepth(urls.main)).toBe(2); // nenhuma foi apagada
+    expect(await consumer.pollOnce()).toBe(2); // both arrived in the same batch
+    expect(seen).toEqual([first.data.externalTransactionId]); // the second one was not processed
+    expect(await queueDepth(urls.main)).toBe(2); // none was deleted
   });
 });
 
 describe('outbox publisher', () => {
   it('publishes pending events once, keyed by eventId', async () => {
-    await openWallet('100.00'); // gera 2 eventos na outbox
+    await openWallet('100.00'); // produces 2 events in the outbox
 
     const publisher = app.get(PublishOutbox);
     expect(await publisher.publishBatch(25)).toBe(2);
@@ -250,7 +250,7 @@ describe('outbox publisher', () => {
   });
 
   it('publishes large backlogs in SQS batches across multiple claims', async () => {
-    await Promise.all(Array.from({ length: 60 }, () => openWallet('10.00'))); // 120 eventos
+    await Promise.all(Array.from({ length: 60 }, () => openWallet('10.00'))); // 120 events
 
     const publisher = app.get(PublishOutbox);
     expect(await publisher.publishBatch(100)).toBe(100);
@@ -280,7 +280,7 @@ describe('pending reference worker', () => {
       source: { type: 'http' },
     });
 
-    await Bun.sleep(1_100); // primeiro retry agendado para +1s (policy padrão)
+    await Bun.sleep(1_100); // first retry scheduled for +1s (default policy)
     await app.get(PendingReferenceWorker).tick();
 
     const stored = await s.runner.run(() => s.txs.findById(refund.transactionId));

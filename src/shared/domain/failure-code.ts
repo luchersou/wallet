@@ -1,15 +1,15 @@
 /**
- * Taxonomia estável de falhas, legível por máquina.
- * A classificação (retentável, corrigível, terminal) e o mapeamento HTTP
- * ficam na camada de aplicação/infra — aqui só os códigos.
+ * Stable, machine-readable failure taxonomy.
+ * The classification (retryable, correctable, terminal) and the HTTP mapping
+ * live in the application/infra layer — only the codes are here.
  */
 export enum FailureCode {
-  // Contrato / payload
+  // Contract / payload
   InvalidMoney = 'INVALID_MONEY',
   InvalidPayload = 'INVALID_PAYLOAD',
   CurrencyMismatch = 'CURRENCY_MISMATCH',
 
-  // Idempotência
+  // Idempotency
   IdempotencyConflict = 'IDEMPOTENCY_CONFLICT',
 
   // Wallet
@@ -18,7 +18,7 @@ export enum FailureCode {
   WalletPlayerMismatch = 'WALLET_PLAYER_MISMATCH',
   InsufficientFunds = 'INSUFFICIENT_FUNDS',
 
-  // Reversões (REFUND / ROLLBACK)
+  // Reversals (REFUND / ROLLBACK)
   ReversalWouldOverdraw = 'REVERSAL_WOULD_OVERDRAW',
   ReferenceNotFound = 'REFERENCE_NOT_FOUND',
   ReferenceMismatch = 'REFERENCE_MISMATCH',
@@ -27,15 +27,15 @@ export enum FailureCode {
   ReferenceAlreadyReversed = 'REFERENCE_ALREADY_REVERSED',
   ReversalAmountMismatch = 'REVERSAL_AMOUNT_MISMATCH',
 
-  // Infra permanente (status FAILED)
+  // Permanent infra (status FAILED)
   PermanentInfrastructureError = 'PERMANENT_INFRASTRUCTURE_ERROR',
 
-  // Consultas / transporte
+  // Queries / transport
   TransactionNotFound = 'TRANSACTION_NOT_FOUND',
   TransientInfrastructureError = 'TRANSIENT_INFRASTRUCTURE_ERROR',
   InternalError = 'INTERNAL_ERROR',
 
-  // Autenticação / autorização
+  // Authentication / authorization
   Unauthenticated = 'UNAUTHENTICATED',
   Forbidden = 'FORBIDDEN',
 }

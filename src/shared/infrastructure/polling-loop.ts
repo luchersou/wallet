@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-/** Executa `tick` em intervalo fixo; stop() espera o tick corrente terminar. */
+/** Runs `tick` at a fixed interval; stop() waits for the current tick to finish. */
 export class PollingLoop {
   private running = false;
   private current?: Promise<void>;

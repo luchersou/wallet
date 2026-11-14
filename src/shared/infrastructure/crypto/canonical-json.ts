@@ -1,4 +1,4 @@
-/** JSON com chaves ordenadas recursivamente; undefined é omitido (semântica JSON). */
+/** JSON with recursively sorted keys; undefined is omitted (JSON semantics). */
 export function canonicalJson(value: unknown): string {
   return JSON.stringify(sortKeys(value));
 }

@@ -15,7 +15,7 @@ export class OutboxPublisherWorker {
     let published: number;
     do {
       published = await this.publishOutbox.publishBatch(env.OUTBOX_BATCH_SIZE);
-    } while (published === env.OUTBOX_BATCH_SIZE); // drena enquanto houver lote cheio
+    } while (published === env.OUTBOX_BATCH_SIZE); // drain while batches are full
     await this.publishOutbox.observeLag();
   }
 
